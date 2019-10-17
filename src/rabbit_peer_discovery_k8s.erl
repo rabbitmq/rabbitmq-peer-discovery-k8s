@@ -47,6 +47,11 @@ init() ->
     %% we cannot start this plugin yet since it depends on the rabbit app,
     %% which is in the process of being started by the time this function is called
     application:load(rabbitmq_peer_discovery_common),
+
+    rabbit_log:info("Peer discovery Kubernetes: setting IpFamily to inet6..."),
+    R = httpc:set_options([{ipfamily, inet6}]),
+    rabbit_log:info("Peer discovery Kubernetes: setting IpFamily to inet6 response: ~p", [R]),
+
     rabbit_peer_discovery_httpc:maybe_configure_proxy().
 
 -spec list_nodes() -> {ok, {Nodes :: list(), NodeType :: rabbit_types:node_type()}}.
