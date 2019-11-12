@@ -34,7 +34,8 @@ groups() ->
                  extract_node_list_short_test,
                  extract_node_list_hostname_short_test,
                  extract_node_list_real_test,
-                 extract_node_list_with_not_ready_addresses_test,
+                 extract_node_list_with_only_not_ready_addresses_test,
+                 extract_node_list_with_ready_and_not_ready_addresses_test,
                  node_name_empty_test,
                  node_name_suffix_test,
                  registration_support
@@ -95,12 +96,20 @@ extract_node_list_real_test(_Config) ->
                    <<"10.1.29.8">>],
     ?assertEqual(Expectation, rabbit_peer_discovery_k8s:extract_node_list(Response)).
 
-extract_node_list_with_not_ready_addresses_test(_Config) ->
+extract_node_list_with_only_not_ready_addresses_test(_Config) ->
     {ok, Response}  =
 	rabbit_json:try_decode(
           rabbit_data_coercion:to_binary(
             "{\"kind\":\"Endpoints\",\"apiVersion\":\"v1\",\"metadata\":{\"name\":\"rabbitmq\",\"namespace\":\"test-rabbitmq\",\"selfLink\":\"\/api\/v1\/namespaces\/test-rabbitmq\/endpoints\/rabbitmq\",\"uid\":\"4ff733b8-3ad2-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170098\",\"creationTimestamp\":\"2017-05-17T07:27:41Z\",\"labels\":{\"app\":\"rabbitmq\",\"type\":\"LoadBalancer\"}},\"subsets\":[{\"notReadyAddresses\":[{\"ip\":\"172.17.0.2\",\"hostname\":\"rabbitmq-0\",\"nodeName\":\"minikube\",\"targetRef\":{\"kind\":\"Pod\",\"namespace\":\"test-rabbitmq\",\"name\":\"rabbitmq-0\",\"uid\":\"e980fe5a-3afd-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170044\"}},{\"ip\":\"172.17.0.4\",\"hostname\":\"rabbitmq-1\",\"nodeName\":\"minikube\",\"targetRef\":{\"kind\":\"Pod\",\"namespace\":\"test-rabbitmq\",\"name\":\"rabbitmq-1\",\"uid\":\"f6285603-3afd-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170071\"}},{\"ip\":\"172.17.0.5\",\"hostname\":\"rabbitmq-2\",\"nodeName\":\"minikube\",\"targetRef\":{\"kind\":\"Pod\",\"namespace\":\"test-rabbitmq\",\"name\":\"rabbitmq-2\",\"uid\":\"fd5a86dc-3afd-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170096\"}}],\"ports\":[{\"name\":\"amqp\",\"port\":5672,\"protocol\":\"TCP\"},{\"name\":\"http\",\"port\":15672,\"protocol\":\"TCP\"}]}]}")),
-    Expectation = [],
+    Expectation = [<<"172.17.0.2">>, <<"172.17.0.5">>, <<"172.17.0.4">>],
+    ?assertEqual(Expectation, rabbit_peer_discovery_k8s:extract_node_list(Response)).
+
+extract_node_list_with_ready_and_not_ready_addresses_test(_Config) ->
+    {ok, Response}  =
+	rabbit_json:try_decode(
+          rabbit_data_coercion:to_binary(
+            "{\"kind\":\"Endpoints\",\"apiVersion\":\"v1\",\"metadata\":{\"name\":\"rabbitmq\",\"namespace\":\"test-rabbitmq\",\"selfLink\":\"\/api\/v1\/namespaces\/test-rabbitmq\/endpoints\/rabbitmq\",\"uid\":\"4ff733b8-3ad2-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170098\",\"creationTimestamp\":\"2017-05-17T07:27:41Z\",\"labels\":{\"app\":\"rabbitmq\",\"type\":\"LoadBalancer\"}},\"subsets\":[{\"addresses\":[{\"ip\":\"10.1.29.8\",\"targetRef\":{\"kind\":\"Pod\",\"namespace\":\"default\",\"name\":\"mariadb-tco7k\",\"uid\":\"fb59cc71-558c-11e6-86e9-ecf4bbd91e6c\",\"resourceVersion\":\"13034802\"}}],\"notReadyAddresses\":[{\"ip\":\"172.17.0.2\",\"hostname\":\"rabbitmq-0\",\"nodeName\":\"minikube\",\"targetRef\":{\"kind\":\"Pod\",\"namespace\":\"test-rabbitmq\",\"name\":\"rabbitmq-0\",\"uid\":\"e980fe5a-3afd-11e7-a40d-080027cbdcae\",\"resourceVersion\":\"170044\"}}]}]}")),
+    Expectation = [<<"172.17.0.2">>, <<"10.1.29.8">>],
     ?assertEqual(Expectation, rabbit_peer_discovery_k8s:extract_node_list(Response)).
 
 node_name_empty_test(_Config) ->

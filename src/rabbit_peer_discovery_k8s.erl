@@ -129,7 +129,7 @@ make_request() ->
       [{"Authorization", "Bearer " ++ binary_to_list(Token1)}],
       [{ssl, [{cacertfile, get_config_key(k8s_cert_path, M)}]}]).
 
-%% @spec node_name(k8s_endpoint) -> list()  
+%% @spec node_name(k8s_endpoint) -> list()
 %% @doc Return a full rabbit node name, appending hostname suffix
 %% @end
 %%
@@ -140,20 +140,12 @@ node_name(Address) ->
 
 
 %% @spec maybe_ready_address(k8s_subsets()) -> list()
-%% @doc Return a list of ready nodes
-%% SubSet can contain also "notReadyAddresses"  
+%% @doc Return a list of ready and not ready nodes
+%% SubSet can contain also "notReadyAddresses"
 %% @end
 %%
-maybe_ready_address(Subset) ->
-    case maps:get(<<"notReadyAddresses">>, Subset, undefined) of
-      undefined -> ok;
-      NotReadyAddresses ->
-            Formatted = string:join([binary_to_list(get_address(X))
-                                     || X <- NotReadyAddresses], ", "),
-            rabbit_log:info("k8s endpoint listing returned nodes not yet ready: ~s",
-                            [Formatted])
-    end,
-    maps:get(<<"addresses">>, Subset, []).
+maybe_addresses(Subset) ->
+    maps:get(<<"notReadyAddresses">>, Subset, []) ++ maps:get(<<"addresses">>, Subset, []).
 
 %% @doc Return a list of nodes
 %%    see https://kubernetes.io/docs/api-reference/v1/definitions/#_v1_endpoints
@@ -162,7 +154,7 @@ maybe_ready_address(Subset) ->
 -spec extract_node_list(term()) -> [binary()].
 extract_node_list(Response) ->
     IpLists = [[get_address(Address)
-		|| Address <- maybe_ready_address(Subset)]
+		|| Address <- maybe_addresses(Subset)]
 	       || Subset <- maps:get(<<"subsets">>, Response, [])],
     sets:to_list(sets:union(lists:map(fun sets:from_list/1, IpLists))).
 
