@@ -1,5 +1,10 @@
 # RabbitMQ Peer Discovery Kubernetes
 
+## This was migrated to https://github.com/rabbitmq/rabbitmq-server
+
+This repository has been moved to the main unified RabbitMQ "monorepo", including all open issues. You can find the source under [/deps/rabbitmq_peer_discovery_k8s](https://github.com/rabbitmq/rabbitmq-server/tree/master/deps/rabbitmq_peer_discovery_k8s).
+All issues have been transferred.
+
 ## Overview
 
 This is an implementation of RabbitMQ [peer discovery interface](https://www.rabbitmq.com/blog/2018/02/12/peer-discovery-subsystem-in-rabbitmq-3-7/)
